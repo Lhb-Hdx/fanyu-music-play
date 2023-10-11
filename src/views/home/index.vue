@@ -54,8 +54,11 @@
         <div v-if="show === 'play'" @click="palyList()">
           <img src="@/assets/playicon.png" />
         </div>
-        <div v-if="show === 'pause'" @click="pauseList()">
+        <div v-if="show === 'pause-1'" @click="pauseList()">
           <img src="@/assets/pauseicon.png" />
+        </div>
+        <div v-else-if="show === 'pause-2'" @click="pauseList2()">
+          <img src="@/assets/playicon.png" />
         </div>
         <div @click="nextList()"><img src="@/assets/next.png" class="small" /></div>
         <div @click="stopList()"><img src="@/assets/stopicon-2.png" class="mcode" /></div>
@@ -142,7 +145,7 @@ function palyList() {
     showToast('请选择需要播放的音乐')
     return
   }
-  show.value = 'pause'
+  show.value = 'pause-1'
   const playData = btoa(unescape(encodeURIComponent(JSON.stringify(play.val))))
   HomeServe.playMusicList({ cmd: playData, sn: SNcode.value, auth: 'abc' }).then(res => {
     if (res.code === 200) {
@@ -156,7 +159,17 @@ const pause = reactive({
   val: { msgType: 'pause' }
 })
 function pauseList() {
-  show.value = 'play'
+  show.value = 'pause-2'
+  const pauseData = btoa(unescape(encodeURIComponent(JSON.stringify(pause.val))))
+  HomeServe.pauseMusicList({ cmd: pauseData, sn: SNcode.value, auth: 'abc' }).then(res => {
+    if (res.code === 200) {
+      console.log('暂停成功')
+    }
+  })
+}
+// 恢复播放
+function pauseList2() {
+  show.value = 'pause-1'
   const pauseData = btoa(unescape(encodeURIComponent(JSON.stringify(pause.val))))
   HomeServe.pauseMusicList({ cmd: pauseData, sn: SNcode.value, auth: 'abc' }).then(res => {
     if (res.code === 200) {
