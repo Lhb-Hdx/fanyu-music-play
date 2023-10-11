@@ -268,10 +268,14 @@ const { finishedText, finished } = toRefs(state)
     flex: 1;
     width: 100px;
     height: 100px;
+    border-radius: 10px;
+    overflow: hidden;
+
     img {
       max-width: 100%;
       max-height: 100%;
       object-fit: contain;
+      border-radius: 10px;
     }
   }
   .word-box {
