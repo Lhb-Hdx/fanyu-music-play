@@ -1,6 +1,5 @@
 import type { AxiosResponse, AxiosRequestHeaders } from 'axios'
 import axios from 'axios'
-import { Toast } from 'vant'
 import qs from 'qs'
 import { useUserStore } from '@/store'
 
@@ -14,7 +13,8 @@ const request = axios.create({
 
 // 异常拦截处理器
 const errorHandler = (error: { message: string }) => {
-  Toast.fail(error.message || 'error')
+  console.log(error.message || 'error')
+
   return Promise.reject(error)
 }
 
@@ -44,12 +44,12 @@ request.interceptors.response.use(
         store.logout()
       }
       if (data.code === 401 || data.code === 403) {
-        Toast.fail('你已被登出，可以取消继续留在该页面，或者重新登录')
+        console.log('你已被登出，可以取消继续留在该页面，或者重新登录')
       } else if (data.code === 300) {
         // 300:重复登录;
-        Toast.fail('您的账号已经在其他地方登录！')
+        console.log('您的账号已经在其他地方登录')
       }
-      Toast.fail(data.message || 'error')
+      console.log('error')
       return Promise.reject(new Error(data.message || 'Error'))
     }
     if (response.config.responseType === 'blob') {

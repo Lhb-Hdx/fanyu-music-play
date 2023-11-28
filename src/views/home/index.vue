@@ -17,7 +17,7 @@
       <div class="id">设备ID号：{{ SNcode }}</div>
     </div>
   </div>
-  <div class="home">
+  <div v-if="isPageAvailable" class="home">
     <van-list v-if="asUpan" :finished="finished" :finished-text="finishedText" class="list">
       <van-checkbox-group v-model="play.musicIndex">
         <van-cell-group>
@@ -65,6 +65,7 @@
       </div>
     </div>
   </div>
+  <div v-else class="rest">22:00:00-07:00:00为休息时段</div>
 </template>
 
 <script setup>
@@ -92,10 +93,63 @@ const state = reactive({
 })
 
 const SNcode = ref('')
+// 定时任务
+const isPageAvailable = ref(true) // 页面是否可用的响应式标志
+
+// 启动每天的定时任务
+const startDailyTasks = () => {
+  const currentTime = new Date()
+
+  // 计算今天晚上10点和明天早上6点的时间
+  const eveningTime = new Date(currentTime)
+  eveningTime.setHours(22, 0, 0, 0)
+  const morningTime = new Date(currentTime)
+  morningTime.setHours(6, 0, 0, 0)
+  if (currentTime >= eveningTime) {
+    eveningTime.setDate(currentTime.getDate() + 1)
+  }
+  if (currentTime >= morningTime) {
+    morningTime.setDate(currentTime.getDate() + 1)
+  }
+
+  // 计算晚上10点和早上6点距离当前时间的毫秒数
+  const eveningTimeout = eveningTime - currentTime
+  const morningTimeout = morningTime - currentTime
+  console.log(eveningTimeout, morningTimeout)
+
+  // 设置晚上10点任务
+  setTimeout(() => {
+    stopList()
+    isPageAvailable.value = false
+    console.log('晚上10点停止服务')
+  }, eveningTimeout)
+
+  // 设置早上6点任务
+  setTimeout(() => {
+    isPageAvailable.value = true
+    console.log('早上6点开启服务')
+  }, morningTimeout)
+}
+
+// 获取当前时间
+const currentTime = new Date()
+
+// 设置晚上10点和早上6点的时间
+const eveningTime = new Date(currentTime)
+eveningTime.setHours(22, 0, 0, 0)
+const morningTime = new Date(currentTime)
+morningTime.setHours(7, 0, 0, 0)
+
+// 如果当前时间在指定时间范围内，页面不可用
+if (currentTime >= eveningTime || currentTime < morningTime) {
+  isPageAvailable.value = false
+}
+// 启动每日定时任务
 onMounted(() => {
   console.log(route.query.id)
-  SNcode.value = route.query.id // sn码,暂时写死  // route.query.id  '845DD7E33D4E'
+  SNcode.value = route.query.id // sn码,测试使用'845DD7E33D4E'  // route.query.id
   isUstatus()
+  startDailyTasks()
 })
 
 // 获取音乐
@@ -107,10 +161,6 @@ function getList() {
   const getData = btoa(JSON.stringify(get.val))
   HomeServe.getMusicList({ cmd: getData, sn: SNcode.value, auth: 'abc' }).then(res => {
     if (res.code === 200) {
-      // list.value = res.data.map(item => {
-      //   // 替换数字开头的部分为空字符串
-      //   return item.replace(/^\d+\s+/, '')
-      // })
       list.value = res.data
     }
   })
@@ -226,7 +276,6 @@ const ustatus = reactive({
   val: { msgType: 'ustatus' }
 })
 function isUstatus() {
-  console.log(SNcode.value)
   const ustatusData = btoa(unescape(encodeURIComponent(JSON.stringify(ustatus.val))))
   HomeServe.isUstatus({ cmd: ustatusData, sn: SNcode.value, auth: 'abc' }).then(res => {
     if (res.code === 200 && res.data === 'EXISITS') {
@@ -253,6 +302,7 @@ const { finishedText, finished } = toRefs(state)
   font-size: 20px;
   font-weight: 500;
 }
+
 .van-nav-bar {
   position: fixed;
   top: 0;
@@ -263,10 +313,12 @@ const { finishedText, finished } = toRefs(state)
 
 .cell {
   text-align: left;
+
   .spanC {
     color: rgb(137, 149, 164);
   }
 }
+
 .illustrate {
   width: 100vw;
   height: 28vh;
@@ -277,6 +329,7 @@ const { finishedText, finished } = toRefs(state)
   color: #fff;
   margin-bottom: -15px;
   padding-bottom: 15px;
+
   .img-box {
     flex: 1;
     width: 100px;
@@ -291,14 +344,17 @@ const { finishedText, finished } = toRefs(state)
       border-radius: 10px;
     }
   }
+
   .word-box {
     text-align: left;
     flex: 2;
+
     .til {
       padding-bottom: 10px;
       font-size: 14px;
       font-weight: 500;
     }
+
     .text {
       font-size: 12px;
       font-weight: 400;
@@ -307,6 +363,7 @@ const { finishedText, finished } = toRefs(state)
     }
   }
 }
+
 .Upan {
   z-index: 10000;
   height: 7vh;
@@ -326,12 +383,17 @@ const { finishedText, finished } = toRefs(state)
       font-weight: 500;
       color: #333;
     }
+
     .id {
       font-size: 11px;
       font-weight: 400;
       color: #666;
     }
   }
+}
+.rest {
+  font-size: 17px;
+  margin-top: 40px;
 }
 
 .foot {
@@ -343,6 +405,7 @@ const { finishedText, finished } = toRefs(state)
   left: 0;
   border-top: 1px solid rgb(238, 238, 238);
   z-index: 999;
+
   .box {
     padding: 0 50px;
 
@@ -361,10 +424,12 @@ const { finishedText, finished } = toRefs(state)
         width: 10vw;
         height: 10vw;
       }
+
       .small {
         width: 5vw;
         height: 5vw;
       }
+
       .mcode {
         width: 6vw;
         height: 6vw;
